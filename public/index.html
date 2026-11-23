@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>Visa Coach</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%231f4e79'/><path d='M9 10h14M9 16h14M9 22h8' stroke='white' stroke-width='2.5' stroke-linecap='round'/></svg>">
+  <link rel="stylesheet" href="app.css">
+</head>
+<body>
+  <header class="top">
+    <div class="brand"><span class="logo" aria-hidden="true"></span>Visa Coach <span class="tag">local</span></div>
+    <nav aria-label="Sections">
+      <button data-view="setup" aria-current="page">Case file</button>
+      <button data-view="interview">Interview</button>
+      <button data-view="report">Report</button>
+      <button data-view="history">History</button>
+    </nav>
+    <div class="status" id="status" title="Speech recognition status"></div>
+  </header>
+
+  <main>
+    <!-- CASE FILE -->
+    <section id="view-setup" class="view">
+      <div class="card uploads">
+        <h2>Start here: your CV and statement of purpose</h2>
+        <p class="muted">Drop them in and Claude fills in your case file below, so you only check and add what's missing. You can upload them whenever you're ready; they stay on this computer.</p>
+        <div class="slots">
+          <div class="slot" data-kind="cv">
+            <h3>CV / résumé</h3>
+            <label class="drop">
+              <input type="file" accept=".pdf,.docx,.txt,.md,.png,.jpg,.jpeg">
+              <span class="drop-empty">Drop your CV here or <u>choose a file</u></span>
+              <small class="muted">PDF, Word (.docx), text or photo</small>
+            </label>
+            <div class="slot-file" hidden></div>
+          </div>
+          <div class="slot" data-kind="sop">
+            <h3>Statement of purpose</h3>
+            <label class="drop">
+              <input type="file" accept=".pdf,.docx,.txt,.md,.png,.jpg,.jpeg">
+              <span class="drop-empty">Drop your SOP here or <u>choose a file</u></span>
+              <small class="muted">PDF, Word (.docx), text or photo</small>
+            </label>
+            <div class="slot-file" hidden></div>
+          </div>
+          <div class="slot" data-kind="other">
+            <h3>Other documents <span class="muted small">optional</span></h3>
+            <label class="drop">
+              <input type="file" multiple accept=".pdf,.docx,.txt,.md,.png,.jpg,.jpeg">
+              <span class="drop-empty">I-20 / CAS, admission letter, bank or loan letters</span>
+              <small class="muted">Add as many as you like</small>
+            </label>
+            <ul class="doclist"></ul>
+          </div>
+        </div>
+        <div class="row-end">
+          <p class="muted small" id="extractStatus" aria-live="polite"></p>
+          <button type="button" id="extractBtn" class="primary" disabled>Fill my case file</button>
+        </div>
+        <div id="insights" hidden></div>
+      </div>
+
+      <div class="grid2">
+        <form id="profile" class="card" autocomplete="off">
+          <h2>Your case</h2>
+          <p class="muted">The officer reads this like the screen at the window. Fields marked <span class="auto-chip">from your documents</span> were filled in by Claude; check them. Anything you type is never overwritten.</p>
+          <div class="row2">
+            <label>Visa <select name="visaId" id="visaSelect"></select></label>
+            <label>Consulate / city <input name="consulate" placeholder="e.g. US Consulate, Chennai"></label>
+          </div>
+          <div class="row2">
+            <label>Name <input name="name"></label>
+            <label>Nationality <input name="nationality" placeholder="e.g. India"></label>
+          </div>
+          <label>Purpose <small>school + program, trip, or job</small>
+            <textarea name="purpose" rows="2" placeholder="MS in Computer Science, Purdue University, Fall 2027"></textarea></label>
+          <label>Funding and sponsor <small>who pays, how much, from where</small>
+            <textarea name="funding" rows="2"></textarea></label>
+          <label>Ties at home <small>family, job, property, plans after</small>
+            <textarea name="ties" rows="2"></textarea></label>
+          <label>Education and work background
+            <textarea name="background" rows="2"></textarea></label>
+          <div class="row2">
+            <label>Travel history <textarea name="travel" rows="2"></textarea></label>
+            <label>Previous refusals <textarea name="refusals" rows="2" placeholder="Leave empty if none"></textarea></label>
+          </div>
+          <label>What worries you about the interview?
+            <textarea name="worries" rows="2"></textarea></label>
+          <p class="saved muted" id="savedNote" aria-live="polite"></p>
+        </form>
+
+        <div class="stack">
+          <div class="card">
+            <h2>What your documents say</h2>
+            <p class="muted">Your answers have to match these. Edit anything that's wrong; reading the documents again replaces this box.</p>
+            <label class="sr-only" for="docFacts">Facts from your documents</label>
+            <textarea id="docFacts" name="docFacts" form="profile" rows="9" placeholder="Filled in when Claude reads your CV and SOP. You can also type facts here."></textarea>
+          </div>
+
+          <div class="card">
+            <h2>Interview settings</h2>
+            <div class="row2">
+              <label>Officer
+                <select id="persona">
+                  <option value="neutral">Neutral, brisk</option>
+                  <option value="rushed">Rushed (long queue)</option>
+                  <option value="sceptical">Sceptical</option>
+                  <option value="friendly">Friendly but probing</option>
+                </select>
+              </label>
+              <label>Focus
+                <select id="drill"><option value="">Full interview</option></select>
+              </label>
+            </div>
+            <div class="row2">
+              <label>Answer by
+                <select id="inputMode">
+                  <option value="voice">Voice (microphone)</option>
+                  <option value="text">Typing</option>
+                </select>
+              </label>
+              <label>Officer voice
+                <select id="voiceSelect"><option value="">Off (text only)</option></select>
+              </label>
+            </div>
+            <label class="check"><input type="checkbox" id="reviewTranscript"> Let me fix the transcript before it's sent</label>
+            <button type="button" id="startBtn" class="primary big">Step up to the window</button>
+            <p class="error" id="startError" role="alert"></p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- INTERVIEW -->
+    <section id="view-interview" class="view" hidden>
+      <div class="window">
+        <div class="officer card">
+          <div class="officer-head">
+            <span class="badge" id="officerBadge">Officer</span>
+            <span class="timer" id="timer">0:00</span>
+          </div>
+          <p class="line" id="officerLine" aria-live="polite">Start an interview from your case file.</p>
+          <p class="thinking" id="thinking" hidden><span class="dots"><i></i><i></i><i></i></span> Officer is reading your answer…</p>
+        </div>
+
+        <div class="answer card" id="answerCard">
+          <div id="voiceControls">
+            <button type="button" id="micBtn" class="mic" aria-pressed="false">
+              <span class="mic-dot" aria-hidden="true"></span>
+              <span id="micLabel">Click or hold Space to answer</span>
+            </button>
+            <canvas id="level" width="300" height="36" aria-hidden="true"></canvas>
+          </div>
+          <form id="textForm" class="textform">
+            <textarea id="answerText" rows="3" placeholder="Type your answer and press Enter"></textarea>
+            <div class="row-end">
+              <span class="muted small" id="heardNote"></span>
+              <button type="submit" class="primary" id="sendBtn">Send</button>
+            </div>
+          </form>
+          <div class="row-end">
+            <button type="button" id="endBtn" class="ghost">Walk away &amp; get report</button>
+          </div>
+          <p class="error" id="interviewError" role="alert"></p>
+        </div>
+
+        <details class="card transcript" open>
+          <summary>Transcript</summary>
+          <ol id="transcript"></ol>
+        </details>
+      </div>
+    </section>
+
+    <!-- REPORT -->
+    <section id="view-report" class="view" hidden>
+      <div id="reportBody"><div class="card empty">Finish an interview to see its report.</div></div>
+    </section>
+
+    <!-- HISTORY -->
+    <section id="view-history" class="view" hidden>
+      <div class="card">
+        <h2>Progress</h2>
+        <div id="trend"></div>
+      </div>
+      <div class="card">
+        <h2>Past interviews</h2>
+        <div id="historyList"></div>
+      </div>
+    </section>
+  </main>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>

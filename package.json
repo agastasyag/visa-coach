@@ -1,0 +1,19 @@
+{
+  "name": "visa-coach",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Local visa interview practice: Claude plays the officer, Whisper runs on your machine.",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node test/e2e.mjs",
+    "test:docs": "node test/docs.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@huggingface/transformers": "3.8.1"
+  }
+}

@@ -1,0 +1,5 @@
+node_modules/
+# Your case file, documents, interviews and reports stay on this computer
+data/
+.env
+*.log
